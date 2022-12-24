@@ -56,14 +56,11 @@ class MessageWallHooks {
 	 * @param int $baseRevId
 	 * @return bool
 	 */
-	public static function onArticleSaveComplete(
-		WikiPage $article, User $user, $summary, $minoredit, $watchthis,
-		$sectionanchor, $flags, $revision, &$status, $baseRevId
-	) {
+	public static function onPageSaveComplete( WikiPage $wikiPage, MediaWiki\User\UserIdentity $user, string $summary, int $flags, MediaWiki\Revision\RevisionRecord $revisionRecord, MediaWiki\Storage\EditResult $editResult ) {
 		// Check if the article is a message wall thread
-		if ( $article->getTitle()->getNamespace() == NS_MESSAGE_WALL ) {
+		if ( $wikiPage->getTitle()->getNamespace() == NS_MESSAGE_WALL ) {
 			// Save the message wall thread
-			MessageWallThread::save( $article, $revision );
+			MessageWallThread::save( $wikiPage, $revisionRecord->getID() );
 		}
 
 		return true;
