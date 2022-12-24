@@ -48,7 +48,7 @@ $wgHooks['UserProfileBeginLeft'][] = 'MessageWallHooks::onUserProfileBeginLeft';
 // Register the extension's ResourceLoader modules
 $wgResourceModules += array_merge( $wgResourceModules, array(
 	'ext.messageWall.styles' => array(
-		'class' => 'ResourceLoaderModule',
+		'class' => 'ResourceLoaderWikiModule',
 		'remoteBasePath' => $GLOBALS['wgScriptPath'],
 		'localBasePath' => __DIR__,
 		'resources' => array(
@@ -59,7 +59,7 @@ $wgResourceModules += array_merge( $wgResourceModules, array(
 		)
 	),
 	'ext.messageWall.scripts' => array(
-		'class' => 'ResourceLoaderModule',
+		'class' => 'ResourceLoaderWikiModule',
 		'remoteBasePath' => $GLOBALS['wgScriptPath'],
 		'localBasePath' => __DIR__,
 		'resources' => array(
