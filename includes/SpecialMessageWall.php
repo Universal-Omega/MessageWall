@@ -1,11 +1,16 @@
 <?php
 
 /**
- * Special page to display a message wall
+ * Special page for the Message Wall extension
  *
- * @ingroup SpecialPage
+ * @file
+ * @ingroup Extensions
+ * @author Universal Omega
+ * @license GPL-3.0-or-later
  */
+
 class SpecialMessageWall extends SpecialPage {
+
 	/**
 	 * Constructor
 	 */
@@ -14,105 +19,76 @@ class SpecialMessageWall extends SpecialPage {
 	}
 
 	/**
-	 * Main execution point
+	 * Main method for the special page
 	 *
 	 * @param string|null $subPage
 	 */
 	public function execute( $subPage ) {
-		global $wgOut;
+		$out = $this->getOutput();
+		$request = $this->getRequest();
+		$user = $this->getUser();
 
-		// Check user permissions
-		$this->checkPermissions();
-
-		// Set the page title and add CSS
-		$this->setHeaders();
-		$wgOut->addModuleStyles( 'ext.MessageWall.styles' );
-
-		// Get the thread ID and parent ID from the subpage parameter
-		$threadId = $subPage;
-		$parentId = null;
-		if ( strpos( $subPage, '/' ) !== false ) {
-			list( $threadId, $parentId ) = explode( '/', $subPage );
-		}
-
-		// Get the thread from the database
-		$thread = MessageWallThread::get( $threadId );
-
-		// Check if the thread exists
-		if ( !$thread ) {
-			$wgOut->addWikiText( wfMessage( 'messagewall-thread-doesnt-exist' )->plain() );
+		// Check if the user has the required permissions
+		if ( !$user->isAllowed( 'messagewall' ) ) {
+			$out->permissionRequired( 'messagewall' );
 			return;
 		}
 
-		// Output the thread and its replies
-		$wgOut->addHTML( self::getThreadHTML( $thread ) );
-		$wgOut->addHTML( self::getRepliesHTML( $threadId, $parentId ) );
-	}
+		// Set the page title and add CSS and JavaScript files
+		$out->setPageTitle( wfMessage( 'message-wall-title' ) );
+		$out->addModules( 'ext.messageWall' );
+		$out->addModuleStyles( 'ext.messageWall.styles' );
 
-	/**
-	 * Get the HTML for a message wall thread
-	 *
-	 * @param array $thread
-	 * @return string
-	 */
-	public static function getThreadHTML( $thread ) {
-		// Get the user who created the thread
-		$user = User::newFromId( $thread['userId'] );
-
-		// Get the latest revision of the thread
-		$latestRevision = Revision::newFromId( $thread['latestRevId'] );
-
-		// Get the thread's content
-		$content = ContentHandler::getContentText( $latestRevision->getContent() );
-
-		// Build the HTML for the thread
-		$html = Html::openElement( 'div', array( 'class' => 'message-wall-thread' ) );
-		$html .= Html::openElement( 'div', array( 'class' => 'message-wall-thread-header' ) );
-		$html .= Html::element( 'a', array( 'href' => $user->getUserPage()->getLinkURL() ), $user->getName() );
-		$html .= Html::closeElement( 'div' );
-		$html .= Html::openElement( 'div', array( 'class' => 'message-wall-thread-content' ) );
-		$html .= $content;
-		$html .= Html::closeElement( 'div' );
-		$html .=
-		$html .= Html::openElement( 'div', array( 'class' => 'message-wall-thread-footer' ) );
-		$html .= Html::element( 'a', array( 'class' => 'message-wall-add-reply', 'href' => '#' ), wfMessage( 'messagewall-add-reply' )->plain() );
-		$html .= Html::closeElement( 'div' );
-		$html .= Html::closeElement( 'div' );
-
-		return $html;
-	}
-
-	/**
-	 * Get the HTML for the replies to a message wall thread
-	 *
-	 * @param string $threadId
-	 * @param string|null $parentId
-	 * @return string
-	 */
-	public static function getRepliesHTML( $threadId, $parentId ) {
-		// Get the replies from the database
-		$replies = MessageWallThread::getReplies( $threadId, 10, 0 );
-
-		// Build the HTML for the replies
-		$html = Html::openElement( 'div', array( 'class' => 'message-wall-replies' ) );
-		foreach ( $replies as $reply ) {
-			$user = User::newFromId( $reply['userId'] );
-			$revision = Revision::newFromId( $reply['revId'] );
-			$content = ContentHandler::getContentText( $revision->getContent() );
-			$html .= Html::openElement( 'div', array( 'class' => 'message-wall-reply' ) );
-			$html .= Html::openElement( 'div', array( 'class' => 'message-wall-reply-header' ) );
-			$html .= Html::element( 'a', array( 'href' => $user->getUserPage()->getLinkURL() ), $user->getName() );
-			$html .= Html::closeElement( 'div' );
-			$html .= Html::openElement( 'div', array( 'class' => 'message-wall-reply-content' ) );
-			$html .= $content;
-			$html .= Html::closeElement( 'div' );
-			$html .= Html::openElement( 'div', array( 'class' => 'message-wall-reply-footer' ) );
-			$html .= Html::element( 'a', array( 'class' => 'message-wall-add-reply', 'href' => '#' ), wfMessage( 'messagewall-add-reply' )->plain() );
-			$html .= Html::closeElement( 'div' );
-			$html .= Html::closeElement( 'div' );
+		// Get the user whose message wall is being displayed
+		$targetUser = User::newFromName( $subPage );
+		if ( !$targetUser || !$targetUser->isLoggedIn() ) {
+			$out->addWikiMsg( 'message-wall-invalid-user' );
+			return;
 		}
-		$html .= Html::closeElement( 'div' );
 
-		return $html;
+		// Check if the user is trying to post a message
+		if ( $request->wasPosted() && $request->getVal( 'action' ) === 'post' ) {
+			$message = $request->getVal( 'message' );
+			if ( $message ) {
+				// Save the message to the database and send a notification
+				MessageWall::saveMessage( $targetUser->getName(), $message, $user );
+				MessageWallHooks::onMessageWallPost( $user, $message, $this->getPageTitle() );
+				$out->addWikiMsg( 'message-wall-message-posted' );
+			} else {
+				$out->addWikiMsg( 'message-wall-message-empty' );
+			}
+		}
+
+		// Display the message wall form
+		$form = HTMLForm::factory( 'ooui', array(
+			'message' => array(
+				'type' => 'textarea',
+				'label-message' => 'message-wall-message',
+				'rows' => 5,
+			),
+			'submit' => array(
+				'type' => 'submit',
+				'value' => wfMessage( 'message-wall-submit' )->text(),
+			),
+		), $this->getContext() );
+		$form->setWrapperLegendMsg( 'message-wall-form-legend' );
+		$form->setAction( $this->getPageTitle()->getLocalURL() );
+		$form->setMethod( 'post' );
+		$form->addHiddenField( 'action', 'post' );
+		$form->setSubmitCallback( function () {
+			return true;
+		} );
+		$form->prepareForm();
+		$form->displayForm( false );
+
+		// Display the messages
+		$messages = MessageWall::getMessages( $targetUser->getName() );
+		$out->addHTML( '<div class="message-wall-messages">' );
+		foreach ( $messages as $message ) {
+			$out->addHTML( '<div class="message-wall-message">' );
+			$out->addWikiText( $message['message'] );
+			$out->addHTML( '</div>' );
+		}
+		$out->addHTML( '</div>' );
 	}
 }
