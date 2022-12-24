@@ -9,9 +9,9 @@ class MessageWallThread {
 	 * Save a message wall thread
 	 *
 	 * @param WikiPage $article
-	 * @param int $revision
+	 * @param int $revisionID
 	 */
-	public static function save( WikiPage $article, $revision ) {
+	public static function save( WikiPage $article, $revisionID ) {
 		global $wgUser;
 		
 		$dbw = wfGetDB( DB_MASTER );
@@ -32,14 +32,14 @@ class MessageWallThread {
 				'mw_parent_id' => $parentId,
 				'mw_user_id' => $userId,
 				'mw_timestamp' => $dbw->timestamp(),
-				'mw_latest_rev_id' => $revision
+				'mw_latest_rev_id' => $revisionID
 			),
 			array( 'mw_thread_id' ),
 			array(
 				'mw_parent_id' => $parentId,
 				'mw_user_id' => $userId,
 				'mw_timestamp' => $dbw->timestamp(),
-				'mw_latest_rev_id' => $revision
+				'mw_latest_rev_id' => $revisionID
 			),
 			__METHOD__
 		);
