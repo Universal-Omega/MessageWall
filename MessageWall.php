@@ -19,8 +19,8 @@ $wgExtensionCredits['specialpage'][] = array(
 	'version' => '1.0',
 );
 
-define( 'NS_MESSAGE_WALL', 500 );
-define( 'NS_MESSAGE_WALL_GRAVEYARD', 501 );
+define( 'NS_MESSAGE_WALL', 600 );
+define( 'NS_MESSAGE_WALL_GRAVEYARD', 601 );
 $wgExtraNamespaces[NS_MESSAGE_WALL] = 'Message_Wall';
 $wgExtraNamespaces[NS_MESSAGE_WALL_GRAVEYARD] = 'Message_Wall_Graveyard';
 
