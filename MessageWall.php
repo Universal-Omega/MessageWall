@@ -46,7 +46,7 @@ $wgSpecialPages['MessageWall'] = 'SpecialMessageWall';
 // Register the hooks
 $wgHooks['BeforePageDisplay'][] = 'MessageWallHooks::onBeforePageDisplay';
 $wgHooks['LoadExtensionSchemaUpdates'][] = 'MessageWallHooks::onLoadExtensionSchemaUpdates';
-$wgHooks['ArticleSaveComplete'][] = 'MessageWallHooks::onArticleSaveComplete';
+$wgHooks['PageSaveComplete'][] = 'MessageWallHooks::onPageSaveComplete';
 $wgHooks['ArticleDeleteComplete'][] = 'MessageWallHooks::onArticleDeleteComplete';
 $wgHooks['UserProfileBeginLeft'][] = 'MessageWallHooks::onUserProfileBeginLeft';
 
