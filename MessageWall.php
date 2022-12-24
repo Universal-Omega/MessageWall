@@ -41,6 +41,8 @@ $wgSpecialPages['MessageWall'] = 'SpecialMessageWall';
 // Register the hooks
 $wgHooks['BeforePageDisplay'][] = 'MessageWallHooks::onBeforePageDisplay';
 $wgHooks['LoadExtensionSchemaUpdates'][] = 'MessageWallHooks::onLoadExtensionSchemaUpdates';
+$wgHooks['ArticleSaveComplete'][] = 'MessageWallHooks::onArticleSaveComplete';
+$wgHooks['ArticleDeleteComplete'][] = 'MessageWallHooks::onArticleDeleteComplete';
 $wgHooks['UserProfileBeginLeft'][] = 'MessageWallHooks::onUserProfileBeginLeft';
 
 // Register the extension's ResourceLoader modules
