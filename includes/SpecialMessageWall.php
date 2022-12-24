@@ -41,7 +41,7 @@ class SpecialMessageWall extends SpecialPage {
 
 		// Get the user whose message wall is being displayed
 		$targetUser = User::newFromName( $subPage );
-		if ( !$targetUser || !$targetUser->isLoggedIn() ) {
+		if ( !$targetUser || !$targetUser->isRegistered() ) {
 			$out->addWikiMsg( 'message-wall-invalid-user' );
 			return;
 		}
