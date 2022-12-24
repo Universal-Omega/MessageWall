@@ -105,3 +105,5 @@ MessageWall.prototype.showError = function ( message ) {
 // Create the message wall
 mw.MessageWall = new MessageWall();
 
+}( jQuery, mediaWiki ) );
+
