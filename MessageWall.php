@@ -38,30 +38,35 @@ foreach ( $autoloadClasses as $class => $file ) {
 // Register the special page
 $wgSpecialPages['MessageWall'] = 'SpecialMessageWall';
 
-// Register the hook
+// Register the hooks
 $wgHooks['BeforePageDisplay'][] = 'MessageWallHooks::onBeforePageDisplay';
+$wgHooks['LoadExtensionSchemaUpdates'][] = 'MessageWallHooks::onLoadExtensionSchemaUpdates';
+$wgHooks['ArticleSaveComplete'][] = 'MessageWallHooks::onArticleSaveComplete';
+$wgHooks['ArticleDeleteComplete'][] = 'MessageWallHooks::onArticleDeleteComplete';
+$wgHooks['UserProfileBeginLeft'][] = 'MessageWallHooks::onUserProfileBeginLeft';
 
-// Register the messages
-$wgExtensionMessagesFiles['MessageWall'] = __DIR__ . '/MessageWall.i18n.php';
-
-// Register the resource files
-$wgResourceModules['ext.messageWall'] = array(
-	'styles' => 'resources/messageWall.css',
-	'scripts' => 'resources/messageWall.js',
-	'messages' => array(
-		'message-wall-message-count',
-		'message-wall-history',
-		'message-wall-thread-deleted',
-		'message-wall-button-to-preview-comment',
-		'message-wall-button-cancel-preview',
-		'message-wall-button-post',
-		'message-wall-button-preview',
-		'message-wall-button-cancel',
-		'message-wall-loading',
-		'message-wall-preview',
-		'message-wall-confirm-delete',
+// Register the extension's ResourceLoader modules
+$wgResourceModules += array_merge( $wgResourceModules, array(
+	'ext.messageWall.styles' => array(
+		'class' => 'ResourceLoaderStyleModule',
+		'remoteBasePath' => $GLOBALS['wgScriptPath'],
+		'localBasePath' => __DIR__,
+		'resources' => array(
+			array(
+				'type' => 'style',
+				'src' => 'resources/messageWall.css'
+			)
+		)
 	),
-	'localBasePath' => __DIR__,
-	'remoteExtPath' => 'MessageWall',
+	'ext.messageWall.scripts' => array(
+		'class' => 'ResourceLoaderScriptModule',
+		'remoteBasePath' => $GLOBALS['wgScriptPath'],
+		'localBasePath' => __DIR__,
+		'resources' => array(
+			array(
+				'type' => 'script',
+				'src' => 'resources/messageWall.js'
+			)
+		)
+	)
 );
-
