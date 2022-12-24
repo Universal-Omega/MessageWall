@@ -51,7 +51,7 @@ class SpecialMessageWall extends SpecialPage {
 			$message = $request->getVal( 'message' );
 			if ( $message ) {
 				// Save the message to the database and send a notification
-				MessageWall::saveMessage( $targetUser->getName(), $message, $user );
+				MessageWallController::saveMessage( $targetUser->getName(), $message, $user );
 				MessageWallHooks::onMessageWallPost( $user, $message, $this->getPageTitle() );
 				$out->addWikiMsg( 'message-wall-message-posted' );
 			} else {
@@ -82,7 +82,7 @@ class SpecialMessageWall extends SpecialPage {
 		$form->displayForm( false );
 
 		// Display the messages
-		$messages = MessageWall::getMessages( $targetUser->getName() );
+		$messages = MessageWallController::getMessages( $targetUser->getName() );
 		$out->addHTML( '<div class="message-wall-messages">' );
 		foreach ( $messages as $message ) {
 			$out->addHTML( '<div class="message-wall-message">' );
