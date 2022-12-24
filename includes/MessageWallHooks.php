@@ -42,6 +42,50 @@ class MessageWallHooks {
 	}
 
 	/**
+	 * Hook function called after an article is saved
+	 *
+	 * @param WikiPage $article
+	 * @param User $user
+	 * @param string $summary
+	 * @param bool $minoredit
+	 * @param bool $watchthis
+	 * @param bool $sectionanchor
+	 * @param int $flags
+	 * @param int $revision
+	 * @param int $status
+	 * @param int $baseRevId
+	 * @return bool
+	 */
+	public static function onArticleSaveComplete(
+		WikiPage $article, User $user, $summary, $minoredit, $watchthis,
+		$sectionanchor, $flags, $revision, &$status, $baseRevId
+	) {
+		// Check if the article is a message wall thread
+		if ( $article->getTitle()->getNamespace() == NS_MESSAGE_WALL ) {
+			// Save the message wall thread
+			MessageWallThread::save( $article, $revision );
+		}
+
+		return true;
+	}
+
+	/**
+	 * Hook function called after an article is deleted
+	 *
+	 * @param WikiPage $article
+	 */
+	public static function onArticleDeleteComplete( WikiPage $article, User $user, $reason, $articleId ) {
+		// Check if the article is a message wall thread
+		if ( $article->getTitle()->getNamespace() == NS_MESSAGE_WALL ) {
+			// Delete the message wall thread
+			MessageWallThread::delete( $articleId );
+		}
+
+		return true;
+	}
+
+
+	/**
 	 * Called when a user profile is being displayed
 	 *
 	 * @param User $user
