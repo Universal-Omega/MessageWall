@@ -1,12 +1,14 @@
--- Table to store message wall messages
-CREATE TABLE message_wall (
-	mw_username VARCHAR(255) NOT NULL,
-	mw_user_id INT NOT NULL,
-	mw_user_name VARCHAR(255) NOT NULL,
-	mw_message TEXT NOT NULL,
-	mw_timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	PRIMARY KEY (mw_username, mw_timestamp)
-);
-
--- Index on message wall user IDs
-CREATE INDEX message_wall_user_id_idx ON message_wall (mw_user_id);
+CREATE TABLE `message_wall` (
+  `mw_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `mw_thread_id` varbinary(255) NOT NULL DEFAULT '',
+  `mw_parent_id` varbinary(255) DEFAULT NULL,
+  `mw_user_id` int(10) unsigned NOT NULL DEFAULT '0',
+  `mw_timestamp` varbinary(14) NOT NULL DEFAULT '',
+  `mw_latest_rev_id` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`mw_id`),
+  KEY `mw_thread_id` (`mw_thread_id`),
+  KEY `mw_parent_id` (`mw_parent_id`),
+  KEY `mw_user_id` (`mw_user_id`),
+  KEY `mw_timestamp` (`mw_timestamp`),
+  KEY `mw_latest_rev_id` (`mw_latest_rev_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
