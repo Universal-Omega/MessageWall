@@ -15,7 +15,7 @@ class SpecialMessageWall extends SpecialPage {
 	 * Constructor
 	 */
 	public function __construct() {
-		parent::__construct( 'MessageWall' );
+		parent::__construct( 'MessageWall', 'read' );
 	}
 
 	/**
@@ -29,10 +29,10 @@ class SpecialMessageWall extends SpecialPage {
 		$user = $this->getUser();
 
 		// Check if the user has the required permissions
-		if ( !$user->isAllowed( 'messagewall' ) ) {
+		/* if ( !$user->isAllowed( 'messagewall' ) ) {
 			$out->permissionRequired( 'messagewall' );
 			return;
-		}
+		} */
 
 		// Set the page title and add CSS and JavaScript files
 		$out->setPageTitle( wfMessage( 'message-wall-title' ) );
