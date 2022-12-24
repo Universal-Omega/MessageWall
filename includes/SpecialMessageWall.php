@@ -40,7 +40,7 @@ class SpecialMessageWall extends SpecialPage {
 
 		// Check if the thread exists
 		if ( !$thread ) {
-			$wgOut->addWikiText( wfMessage( 'messagewall-thread-doesnt-exist' )->plain() );
+			$wgOut->addWikiMsg( 'messagewall-thread-doesnt-exist' );
 			return;
 		}
 
