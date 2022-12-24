@@ -69,4 +69,4 @@ $wgResourceModules += array_merge( $wgResourceModules, array(
 			)
 		)
 	)
-);
+) );
