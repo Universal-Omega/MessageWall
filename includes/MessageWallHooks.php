@@ -12,19 +12,75 @@
 class MessageWallHooks {
 
 	/**
-	 * Called when the page is being rendered
+	 * Hook function called before a page is displayed
 	 *
 	 * @param OutputPage $out
 	 * @param Skin $skin
 	 * @return bool
 	 */
 	public static function onBeforePageDisplay( OutputPage $out, Skin $skin ) {
-		// Add JavaScript and CSS files to the page
-		$out->addModules( 'ext.messageWall' );
-		$out->addModuleStyles( 'ext.messageWall.styles' );
+		// Add the extension's styles and scripts to the page
+		$out->addModules( 'ext.messageWall.styles' );
+		$out->addModules( 'ext.messageWall.scripts' );
 
 		return true;
 	}
+
+	/**
+	 * Hook function called when the extension is installed or upgraded
+	 *
+	 * @param DatabaseUpdater $updater
+	 * @return bool
+	 */
+	public static function onLoadExtensionSchemaUpdates( DatabaseUpdater $updater ) {
+		// Run the SQL scripts to create or update the extension's database tables
+		$updater->addExtensionTable( 'message_wall', __DIR__ . '/sql/message_wall.sql' );
+		$updater->addExtensionTable( 'message_wall_history', __DIR__ . '/sql/message_wall_history.sql' );
+		$updater->addExtensionTable( 'message_wall_user_talk_archive', __DIR__ . '/sql/message_wall_user_talk_archive.sql' );
+
+		return true;
+	}
+
+	/**
+	 * Hook function called after an article is saved
+	 *
+	 * @param WikiPage $article
+	 * @param User $user
+	 * @param string $summary
+	 * @param bool $minoredit
+	 * @param bool $watchthis
+	 * @param bool $sectionanchor
+	 * @param int $flags
+	 * @param int $revision
+	 * @param int $status
+	 * @param int $baseRevId
+	 * @return bool
+	 */
+	public static function onPageSaveComplete( WikiPage $wikiPage, MediaWiki\User\UserIdentity $user, string $summary, int $flags, MediaWiki\Revision\RevisionRecord $revisionRecord, MediaWiki\Storage\EditResult $editResult ) {
+		// Check if the article is a message wall thread
+		if ( $wikiPage->getTitle()->getNamespace() == 600 ) {
+			// Save the message wall thread
+			MessageWallThread::save( $wikiPage, $revisionRecord->getID() );
+		}
+
+		return true;
+	}
+
+	/**
+	 * Hook function called after an article is deleted
+	 *
+	 * @param WikiPage $article
+	 */
+	public static function onArticleDeleteComplete( WikiPage $article, User $user, $reason, $articleId ) {
+		// Check if the article is a message wall thread
+		if ( $article->getTitle()->getNamespace() == NS_MESSAGE_WALL ) {
+			// Delete the message wall thread
+			MessageWallThread::delete( $articleId );
+		}
+
+		return true;
+	}
+
 
 	/**
 	 * Called when a user profile is being displayed
@@ -62,5 +118,4 @@ class MessageWallHooks {
 
 		return true;
 	}
-
 }

@@ -1,99 +1,159 @@
 <?php
 
 /**
- * Message Wall thread class
- *
- * @file
- * @ingroup Extensions
- * @author Universal Omega
- * @license GPL-3.0-or-later
+ * Class representing a message wall thread
  */
-
 class MessageWallThread {
 
 	/**
-	 * The ID of the thread
+	 * Save a message wall thread
 	 *
-	 * @var int
+	 * @param WikiPage $article
+	 * @param int $revisionID
 	 */
-	protected $id;
-
+	public static function save( WikiPage $article, $revisionID ) {
+		global $wgUser;
+		
+		$dbw = wfGetDB( DB_MASTER );
+		
+		// Get the thread ID and parent thread ID from the article's title
+		$title = $article->getTitle();
+		$threadId = $title->getText();
+		$parentId = $title->getParentText();
+		
+		// Get the user who created the thread
+		$userId = $wgUser->getId();
+		
+		// Insert or update the thread in the database
+		$dbw->upsert(
+			'message_wall',
+			array(
+				'mw_thread_id' => $threadId,
+				'mw_parent_id' => $parentId,
+				'mw_user_id' => $userId,
+				'mw_timestamp' => $dbw->timestamp(),
+				'mw_latest_rev_id' => $revisionID
+			),
+			array( 'mw_thread_id' ),
+			array(
+				'mw_parent_id' => $parentId,
+				'mw_user_id' => $userId,
+				'mw_timestamp' => $dbw->timestamp(),
+				'mw_latest_rev_id' => $revisionID
+			),
+			__METHOD__
+		);
+	}
+	
 	/**
-	 * The user who started the thread
+	 * Get a message wall thread
 	 *
-	 * @var User
+	 * @param string $threadId
+	 * @return array|null
 	 */
-	protected $user;
+	public static function get( $threadId ) {
+		$dbr = wfGetDB( DB_REPLICA );
+		
+		$row = $dbr->selectRow(
+			'message_wall',
+			array(
+				'mw_thread_id',
+				'mw_parent_id',
+				'mw_user_id',
+				'mw_timestamp',
+				'mw_latest_rev_id'
+			),
+			array( 'mw_thread_id' => $threadId ),
+			__METHOD__
+		);
 
-	/**
-	 * The title of the thread
-	 *
-	 * @var string
-	 */
-	protected $title;
-
-	/**
-	 * The messages in the thread
-	 *
-	 * @var array
-	 */
-	protected $messages = array();
-
-	/**
-	 * Construct a new MessageWallThread object
-	 *
-	 * @param int $id The ID of the thread
-	 * @param User $user The user who started the thread
-	 * @param string $title The title of the thread
-	 */
-	public function __construct( $id, User $user, $title ) {
-		$this->id = $id;
-		$this->user = $user;
-		$this->title = $title;
+		if ( $row ) {
+			return array(
+				'threadId' => $row->mw_thread_id,
+				'parentId' => $row->mw_parent_id,
+				'userId' => $row->mw_user_id,
+				'timestamp' => $row->mw_timestamp,
+				'latestRevId' => $row->mw_latest_rev_id
+			);
+		}
+	
+		return null;
 	}
 
 	/**
-	 * Get the ID of the thread
+	 * Get the replies to a message wall thread
 	 *
-	 * @return int
-	 */
-	public function getId() {
-		return $this->id;
-	}
-
-	/**
-	 * Get the user who started the thread
-	 *
-	 * @return User
-	 */
-	public function getUser() {
-		return $this->user;
-	}
-
-	/**
-	 * Get the title of the thread
-	 *
-	 * @return string
-	 */
-	public function getTitle() {
-		return $this->title;
-	}
-
-	/**
-	 * Get the messages in the thread
-	 *
+	 * @param string $parentId
+	 * @param int $limit
+	 * @param int $offset
 	 * @return array
 	 */
-	public function getMessages() {
-		return $this->messages;
+	public static function getReplies( $parentId, $limit, $offset ) {
+		$dbr = wfGetDB( DB_REPLICA );
+	
+		$res = $dbr->select(
+			'message_wall',
+			array(
+				'mw_thread_id',
+				'mw_parent_id',
+				'mw_user_id',
+				'mw_timestamp',
+				'mw_latest_rev_id'
+			),
+			array( 'mw_parent_id' => $parentId ),
+			__METHOD__,
+			array( 'LIMIT' => $limit, 'OFFSET' => $offset )
+		);
+	
+		$replies = array();
+	
+		foreach ( $res as $row ) {
+			$replies[] = array(
+				'threadId' => $row->mw_thread_id,
+				'parentId' => $row->mw_parent_id,
+				'userId' => $row->mw_user_id,
+				'timestamp' => $row->mw_timestamp,
+				'latestRevId' => $row->mw_latest_rev_id
+			);
+		}
+	
+		return $replies;
+	}
+	
+	/**
+	 * Get the number of replies to a message wall thread
+	 *
+	 * @param string $parentId
+	 * @return int
+	 */
+	public static function getReplyCount( $parentId ) {
+		$dbr = wfGetDB( DB_REPLICA );
+	
+		$res = $dbr->select(
+			'message_wall',
+			array( 'COUNT(*) AS reply_count' ),
+			array( 'mw_parent_id' => $parentId ),
+			__METHOD__
+		);
+	
+		$row = $res->fetchRow();
+
+		return (int)$row->reply_count;
 	}
 
 	/**
-	 * Add a message to the thread
+	 * Delete a message wall thread
 	 *
-	 * @param MessageWallMessage $message The message to add
+	 * @param string $threadId
 	 */
-	public function addMessage( MessageWallMessage $message ) {
-		$this->messages[] = $message;
+	public static function delete( $threadId ) {
+		$dbw = wfGetDB( DB_MASTER );
+
+		// Delete the thread from the database
+		$dbw->delete(
+			'message_wall',
+			array( 'mw_thread_id' => $threadId ),
+			__METHOD__
+		);
 	}
 }
